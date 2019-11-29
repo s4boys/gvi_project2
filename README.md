@@ -1,6 +1,6 @@
 # GVI Projekt 1 - Diagramme
 author: Felix Schick (71scfe1bif), Nicolas Mohr (81moni1bif)  
-date: 29. Movember 2019
+date: 29. November 2019
 
 ## Aufgabe 1 - Bevölkerungsdichte in Europa
 
@@ -13,9 +13,7 @@ Da sich das Shapefile Format aus verschiedenen Datein zusammensetzt, war der ers
 ![shapefiles](documentation/pics/admin_files.png)
 
 Als nächster Schritt kann die komprimierte Shapefile eingelesen werden und als GeoJson genutzt werden. Die GeoJson ist nach Regionen sortiert, dies erlaubt uns für jede Region eine Bevölkerungsdichte zu berechnen und ihr eine Farbe zuzuweisen.
-Diese Daten können wir dann über unseren Tiles Layer legen.
-
-![europa](documentation/pics/europe_far.png)
+Diese Daten können wir dann über unseren Tiles Layer legen.  
 
 Als letzten Schritt werden noch eine Legende und Pop-ups für die Regionen hinzugefügt um die genaue Bevölkerungsdichte dieser abzubilden. 
 
