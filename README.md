@@ -19,6 +19,15 @@ Als letzten Schritt werden noch eine Legende und Pop-ups für die Regionen hinzu
 
 ![pop-up](documentation/pics/europe_pup.png)
 
+### Karte selber hosten
+
+In dem Projekt Repository befindet sich das Python Skript ```serve.py``` welches einen einfachen HTTP Server mit Port 8000 im Ordner startet. Ein alternativer Port kann im Skript eingetragen werden
+
+Server starten mit:  
+```./serve.py```
+
+Danach kann die Karte im Browser unter [http://localhost:8000/exercise1.html](http://localhost:8000/exercise1.html) angesehen werden.
+
 ## Aufgabe 2 - Web-Karte mit Points of Interest 
 
 ## Aufgabe 3 - Karte Sustainable Indicators in Europa (5 Punkte) 
