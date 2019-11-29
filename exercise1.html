@@ -70,7 +70,7 @@
     }
 
     function getColor(density) {
-        return density > 650 ? '#330000' :
+        return density > 700 ? '#330000' :
             density > 500 ? '#4d0000' :
                 density > 300 ? '#800000' :
                     density > 200 ? '#990000' :
@@ -89,10 +89,10 @@
     function style(feature) {
     return {
         fillColor: getColor(feature.properties.POP_ADMIN/feature.properties.SQKM),
-        weight: 2,
+        weight: 1,
         opacity: 1,
         color: 'white',
-        dashArray: '3',
+        dashArray: '1',
         fillOpacity: 0.7
     };
 }
@@ -120,7 +120,6 @@
         var shapefile = 'content/adminshp.zip';
         shp(shapefile).then(function(data){
             geo = L.geoJson(data, {style:style, onEachFeature: onEachFeature}).addTo(map);
-
             var baseMaps = {
                 "BaseLayer": osm
             };
@@ -134,7 +133,7 @@
         legend.onAdd = function (map) {
 
             var div = L.DomUtil.create('div', 'info legend'),
-            grades = [0, 5, 10, 20, 50, 70, 100, 200, 300, 500, 650],
+            grades = [0, 5, 10, 20, 50, 70, 100, 200, 300, 500, 700],
             labels = ["<strong> Einwohner pro km² </strong>"], from, to;
             labels.push('<i style="background:' + getColor(grades[grades.length]) + '"></i> ' + 'Keine Daten');
             for (var i = 0; i < grades.length; i++) {
