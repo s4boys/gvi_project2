@@ -51,7 +51,7 @@
         crossorigin=""></script>
 
 <script>
-    //convert csv to JSON
+    // convert csv to JSON
     function csvJSON(csv) {
         lines = csv.split("\n");
         var result = [];
@@ -66,9 +66,9 @@
             result.push(obj);
         }
         return result; //JavaScript object
-        //return JSON.stringify(result); //JSON String
     }
 
+    // color grading
     function getColor(density) {
         return density > 700 ? '#330000' :
             density > 500 ? '#4d0000' :
@@ -81,11 +81,11 @@
                                         density > 10 ? '#ff9999' :
                                             density > 5 ? '#ffcccc':
                                                 density > 0 ? '#ffe6e6':
-                                                " #cccccc";
+                                                '#cccccc';
     }
 
 
-
+    // define polygon style
     function style(feature) {
     return {
         fillColor: getColor(feature.properties.POP_ADMIN/feature.properties.SQKM),
@@ -98,8 +98,10 @@
 }
 
     function onEachFeature(feature, layer) {
-        // does this feature have a property named popupContent?
+        //calculate Population Density
         var popDensity = Math.round((feature.properties.POP_ADMIN/feature.properties.SQKM)* 100) / 100;
+        
+        //add Pop-up with Population Density
         if(popDensity >= 0){
             let out = "<b>" + feature.properties.ADMIN_NAME + ", " + feature.properties.CNTRY_NAME + "</b><br>" + popDensity + " Einwohner/km&sup2";
             layer.bindPopup(out);
@@ -111,25 +113,34 @@
 
 
     function initialize() {
-        let map;
-        var geo;
-        map = L.map('map_canvas').setView([48.75, 9.21], 7);
+
+        // initialize map
+        let map = L.map('map_canvas').setView([48.75, 9.21], 7);
+        // add humanitarian tile layer to map
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
 
+        // read shapefile
         var shapefile = 'content/adminshp.zip';
+
+        // parse shapefile to geoJson
         shp(shapefile).then(function(data){
-            geo = L.geoJson(data, {style:style, onEachFeature: onEachFeature}).addTo(map);
-            var baseMaps = {
-                "BaseLayer": osm
-            };
-            var overlays = {
-                "PopDensity": geo
-            };
+
+            // add geoJson Layer and add to map
+            var geo = L.geoJson(data, {style:style, onEachFeature: onEachFeature}).addTo(map);
+            
+            // define Layers
+            let baseMaps = {"BaseLayer": osm};
+            let overlays = {"PopDensity": geo};
+
+            // add control for Layers
             L.control.layers(baseMaps,overlays).addTo(map);
         });
 
+        // initialize legend on the bottom left
         var legend =  L.control({position: 'bottomleft'});
+
+        // add population density and colors to legend
         legend.onAdd = function (map) {
 
             var div = L.DomUtil.create('div', 'info legend'),
