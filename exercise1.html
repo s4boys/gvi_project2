@@ -87,16 +87,17 @@
 
     // define polygon style
     function style(feature) {
-    return {
-        fillColor: getColor(feature.properties.POP_ADMIN/feature.properties.SQKM),
-        weight: 1,
-        opacity: 1,
-        color: 'white',
-        dashArray: '1',
-        fillOpacity: 0.7
-    };
-}
+        return {
+            fillColor: getColor(feature.properties.POP_ADMIN/feature.properties.SQKM),
+            weight: 1,
+            opacity: 1,
+            color: 'white',
+            dashArray: '1',
+            fillOpacity: 0.7
+        };
+    }   
 
+    // define functionality for every geoJson feature
     function onEachFeature(feature, layer) {
         //calculate Population Density
         var popDensity = Math.round((feature.properties.POP_ADMIN/feature.properties.SQKM)* 100) / 100;
@@ -111,11 +112,12 @@
         }
     }
 
-
+    // call on load
     function initialize() {
 
         // initialize map
         let map = L.map('map_canvas').setView([48.75, 9.21], 7);
+
         // add humanitarian tile layer to map
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
@@ -142,7 +144,6 @@
 
         // add population density and colors to legend
         legend.onAdd = function (map) {
-
             var div = L.DomUtil.create('div', 'info legend'),
             grades = [0, 5, 10, 20, 50, 70, 100, 200, 300, 500, 700],
             labels = ["<strong> Einwohner pro km² </strong>"], from, to;
@@ -150,21 +151,14 @@
             for (var i = 0; i < grades.length; i++) {
                 from = grades[i];
                 to = grades[i + 1];
-
                 labels.push(
                 '<i style="background:' + getColor(from + 1) + '"></i> ' +
                 from + (to ? '&ndash;' + to : '+'));
             }
-        div.innerHTML = labels.join('<br>');
-        return div; 
-
-
+            div.innerHTML = labels.join('<br>');
+            return div; 
         };
         legend.addTo(map);
-
-
-
-
     }
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
@@ -174,5 +168,4 @@
         crossorigin="anonymous">
 </script>
 </body>
-
 </html>
