@@ -51,17 +51,18 @@
         crossorigin=""></script>
 
 <script>
+    // setup geocode api request
     const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
     const geocodeParams = '&format=json&limit=1';
 
-
+    // amenity object
     function Amenity(name, address, category) {
       this.name = name;
       this.address = address;
       this.category = category;
     }
 
-
+    // list of amenities
     var amenities = [
     new Amenity("Mata Hari", "Geißstraße 3, 70173 Stuttgart", "Bar"),
     new Amenity("Sausalitos", "Theodor-Heuss-Straße 10", "Bar"),
@@ -79,7 +80,7 @@
     new Amenity("Staatsgalerie", "Konrad-Adenauer-Straße 30-32, 70173 Stuttgart", "Kunst & Kultur"),
     new Amenity("Staatsoper Stuttgart", " Oberer Schloßgarten 6, 70173 Stuttgart", "Kunst & Kultur")];
 
-
+    // icon object 
     var LeafIcon = L.Icon.extend({
         options: {
             iconSize:     [32, 37],
@@ -88,6 +89,7 @@
         }
     });
 
+    // add icons to icons
     var barIcon = new LeafIcon({iconUrl: 'content/bar.png'});
     var clubIcon = new LeafIcon({iconUrl: 'content/club.png'});
     var cultureIcon = new LeafIcon({iconUrl: 'content/culture.png'});
@@ -95,6 +97,7 @@
     var shoppingIcon = new LeafIcon({iconUrl: 'content/shopping.png'});
     var educationIcon = new LeafIcon({iconUrl: 'content/education.png'});
 
+    // add layer for icon category
     var barLayer = L.layerGroup();
     var clubLayer = L.layerGroup();
     var cultureLayer = L.layerGroup();
@@ -102,10 +105,9 @@
     var shoppingLayer = L.layerGroup();
     var educationLayer = L.layerGroup();
 
-
+    // add marker to layer
     function createMarker(coords, category){
         if(category == "Bar"){ 
-            
             return L.marker([coords.lat, coords.lon], { icon: barIcon }).addTo(barLayer);
         } else if(category == "Club"){
             return L.marker([coords.lat, coords.lon], { icon: clubIcon }).addTo(clubLayer);
@@ -122,6 +124,8 @@
             return undefined;
         }
     }
+
+    // retrieve coordinates for amenity 
     function geocode(name, address, category) {
         var encoded = encodeURI([geocodeUrl, address, geocodeParams].join(''));
         var xhr = new XMLHttpRequest();
@@ -130,10 +134,6 @@
         xhr.send();
 
         xhr.onload = function () {
-        /**if (xhr.response.length == 0) {
-          alert(xhr.statusText);
-          return;
-        } **/
             let coords = xhr.response[0];
             console.log(name);
             console.log(coords);
@@ -156,10 +156,12 @@
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         }).addTo(map);
 
+        // create marker for every amenity
         amenities.forEach(amenity => {
         geocode(amenity.name, amenity.address, amenity.category)
         });
 
+        // set layers
         let baseMaps = {"BaseLayer": osm};
         var overlays = {
             "Bars": barLayer,
@@ -169,6 +171,8 @@
             "Shopping": shoppingLayer,
             "Bildung": educationLayer 
         };
+
+        // add layers to control box
         L.control.layers(baseMaps, overlays, {collapsed: false, hideSingleBase: true}).addTo(map);
     }
 </script>
