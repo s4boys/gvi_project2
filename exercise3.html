@@ -53,29 +53,41 @@
 
 <script>
 
-    var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode='";
+    var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
 
-    //send request to UN SDG API
-    function apiRequest(geoAreaCode, year){
-
-        var xhr = new XMLHttpRequest();
-        var encoded = encodeURI([sdgurl, geoAreaCode, sdgtime, year].join(''));
-        xhr.open('GET', encoded, true);
-        xhr.responseType = 'json';
-        xhr.send();
-        xhr.onload = function () {
-            console.log(xhr.response)
-        };
-        xhr.onerror = function () {
-            console.error(xhr.statusText);
-        };
-    }
-
-
     function onEachFeature(feature, layer){
-        apiRequest(feature.properties.UN, 2015);
+        var encoded = encodeURI([sdgurl, feature.properties.UN, sdgtime, 2015].join(''));
+        fetch(encoded)
+        .then(data => {return data.json()})
+        .then(res => {
+            currentData = res.data[0];
+            console.log(res);
+            layer.setStyle({
+                fillColor: colorGradient(currentData.value),
+                fillOpacity: 0.5
+            });
+            //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
+            let out = JSON.stringify(currentData, null, 2);
+            console.log(out);
+            layer.bindPopup(out);
+
+
+            
+        })
+        .catch(error => {
+            layer.setStyle({fillColor: '#cccccc', fillOpacity: 0.5});
+            let out = "<b>Keine Daten</b><br>";
+            layer.bindPopup(out);
+        });
+       
     }
+
+    function colorGradient(percent) {
+        r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+        g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+        return 'rgb('+r+','+g+',0)';
+    }   
 
     // call on load
     function initialize() {
@@ -89,19 +101,10 @@
         fetch('http://localhost:8000/content/europe.geojson')
         .then(response => response.json())
         .then(geoData => {
-            console.log(geoData);
-            L.geoJson(geoData, {
-                    clickable: false,
+            let test = L.geoJson(geoData, {
                     onEachFeature: onEachFeature
             }).addTo(map);
-
- 
         });
-
-
-
-
-        
     }
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
