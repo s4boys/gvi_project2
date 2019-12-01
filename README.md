@@ -30,4 +30,28 @@ Danach kann die Karte im Browser unter [http://localhost:8000/exercise1.html](ht
 
 ## Aufgabe 2 - Web-Karte mit Points of Interest 
 
-## Aufgabe 3 - Karte Sustainable Indicators in Europa (5 Punkte) 
+Als erster Schritt wurde ein Objekt definiert, welches alle für uns relevanten Daten der Points of Interest erfasste. Diese sind der Name, die Adresse und die Kategory des Orts.  
+Mit *geocode* wurde anschließend ein API-Request mit der Adresse der Orte gesendet und ein Marker, für die Kategorie des Ortes, erstellt und dem Marker ein Pop-up mit allen Relevanten Informationen zugewiesen.  
+
+Für jede Kategorie wurde eine eigene Layer Group erstellt und alle Marker dieser Kategorie der Layer Group hinzugefügt.
+Anschließend wurden alle Layer Groups der Karte hinzugefügt.
+
+![poi_full](documentation/pics/poi_full.png)
+
+Da alle Marker einer Layer Group angehören, können diese Gruppen der *Layer Control* zugewiesen werden, welche es erlaubt einzelne Layer ein und auszublenden.
+
+![poi_filtered](documentation/pics/poi_filtered.png)
+
+### Karte selber hosten
+
+In dem Projekt Repository befindet sich das Python Skript ```serve.py``` welches einen einfachen HTTP Server mit Port 8000 im Ordner startet. Ein alternativer Port kann im Skript eingetragen werden
+
+Server starten mit:  
+```./serve.py```
+
+Danach kann die Karte im Browser unter [http://localhost:8000/exercise1.html](http://localhost:8000/exercise2.html) angesehen werden.
+
+
+
+
+## Aufgabe 3 - Karte Sustainable Indicators in Europa

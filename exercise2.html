@@ -54,34 +54,11 @@
     const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
     const geocodeParams = '&format=json&limit=1';
 
-    function geocode(name, address, title) {
-      var encoded = encodeURI([geocodeUrl, address, geocodeParams].join(''));
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", encoded, true);
-      xhr.responseType = 'json';
-      xhr.onload = function () {
-        if (xhr.response.length == 0) {
-          alert("No place found");
-          return;
-        }
-        let place = xhr.response[0];
-        let marker = checkActivity(place, title);
-        if (marker !== undefined) {
-          marker.addTo(layerGroup);
-          marker.bindPopup(name);
-        }
-      };
-      xhr.onerror = function () {
-        console.error(xhr.statusText);
-      };
-      xhr.send();
-    }
 
-
-    class Amenity(name, address, amenity) {
+    function Amenity(name, address, category) {
       this.name = name;
       this.address = address;
-      this.amenity = amenity;
+      this.category = category;
     }
 
 
@@ -92,29 +69,108 @@
     new Amenity("Hans im Glück", "Marienstraße 3B, 70178 Stuttgart", "Restaurant"),
     new Amenity("Fernsehturm Stuttgart", "Jahnstraße 120, 70597 Stuttgart", "Kunst & Kultur"),
     new Amenity("Wilhelma", "Wilhelma 13, 70376 Stuttgart", "Kunst & Kultur"),
-    new Amenity("Milaneo Stuttgart", "Mailänder Platz 7 U-Bahn Haltestelle Stadtbibliothek, 70173 Stuttgart", "Shopping"),
+    new Amenity("Das Gerber", "Sophienstraße 21, 70178 Stuttgart", "Shopping"),
     new Amenity("Stadtbibliothek am Mailänder Platz", "Mailänder Platz 1, 70173 Stuttgart", "Bildung"),
     new Amenity("Waranga", "Kleiner Schloßplatz 15, 70173 Stuttgart", "Bar"),
-    new Amenity("Kellerklub", "Rotebühlpl. 4, 70173 Stuttgart", "Club"),
+    new Amenity("Universitätsbibliothek Stuttgart", "Holzgartenstraße 16, 70174 Stuttgart", "Bildung"),
     new Amenity("Schräglage Club", "Hirschstraße 14, 70173 Stuttgart", "Club"),
     new Amenity("Königsbau Passage Stuttgart", "Königstraße 26, 70173 Stuttgart", "Shopping"),
     new Amenity("Platzhirsch", "Geißstraße 12, 70173 Stuttgart", "Restaurant"),
     new Amenity("Staatsgalerie", "Konrad-Adenauer-Straße 30-32, 70173 Stuttgart", "Kunst & Kultur"),
-    new Amenity("Staatsoper Stuttgart", "Staatsoper Stuttgart", "Kunst & Kultur")];
+    new Amenity("Staatsoper Stuttgart", " Oberer Schloßgarten 6, 70173 Stuttgart", "Kunst & Kultur")];
+
+
+    var LeafIcon = L.Icon.extend({
+        options: {
+            iconSize:     [32, 37],
+            iconAnchor:   [0, 32],
+            popupAnchor:  [0, -32]
+        }
+    });
+
+    var barIcon = new LeafIcon({iconUrl: 'content/bar.png'});
+    var clubIcon = new LeafIcon({iconUrl: 'content/club.png'});
+    var cultureIcon = new LeafIcon({iconUrl: 'content/culture.png'});
+    var restaurantIcon = new LeafIcon({iconUrl: 'content/restaurant.png'});
+    var shoppingIcon = new LeafIcon({iconUrl: 'content/shopping.png'});
+    var educationIcon = new LeafIcon({iconUrl: 'content/education.png'});
+
+    var barLayer = L.layerGroup();
+    var clubLayer = L.layerGroup();
+    var cultureLayer = L.layerGroup();
+    var restaurantLayer = L.layerGroup();
+    var shoppingLayer = L.layerGroup();
+    var educationLayer = L.layerGroup();
+
+
+    function createMarker(coords, category){
+        if(category == "Bar"){ 
+            
+            return L.marker([coords.lat, coords.lon], { icon: barIcon }).addTo(barLayer);
+        } else if(category == "Club"){
+            return L.marker([coords.lat, coords.lon], { icon: clubIcon }).addTo(clubLayer);
+        } else if(category == "Kunst & Kultur"){
+            return L.marker([coords.lat, coords.lon], { icon: cultureIcon }).addTo(cultureLayer);
+        } else if(category == "Restaurant"){
+            return L.marker([coords.lat, coords.lon], { icon: restaurantIcon }).addTo(restaurantLayer);
+        } else if(category == "Shopping"){
+            return L.marker([coords.lat, coords.lon], { icon: shoppingIcon }).addTo(shoppingLayer);
+        } else if(category == "Bildung"){
+            return L.marker([coords.lat, coords.lon], { icon: educationIcon }).addTo(educationLayer);
+        } else {
+            console.log(category);
+            return undefined;
+        }
+    }
+    function geocode(name, address, category) {
+        var encoded = encodeURI([geocodeUrl, address, geocodeParams].join(''));
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", encoded, true);
+        xhr.responseType = 'json';
+        xhr.send();
+
+        xhr.onload = function () {
+        /**if (xhr.response.length == 0) {
+          alert(xhr.statusText);
+          return;
+        } **/
+            let coords = xhr.response[0];
+            console.log(name);
+            console.log(coords);
+            let marker = createMarker(coords, category);
+            
+            if (marker !== undefined) {
+                marker.bindPopup("<b>" + name + "</b><br>" + address + "<br>" + category);
+            }
+        };
+        xhr.onerror = function () {
+            console.error(xhr.statusText);
+        };
+    }
+
 
     function initialize() {
         let map;
         var geo;
-        map = L.map('map_canvas').setView([48.75, 9.21], 10);
+        map = L.map('map_canvas').setView([48.75, 9.21], 12);
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         }).addTo(map);
+
+        amenities.forEach(amenity => {
+        geocode(amenity.name, amenity.address, amenity.category)
+        });
+
+        let baseMaps = {"BaseLayer": osm};
+        var overlays = {
+            "Bars": barLayer,
+            "Clubs": clubLayer,
+            "Kunst & Kultur": cultureLayer,
+            "Restaurants": restaurantLayer,
+            "Shopping": shoppingLayer,
+            "Bildung": educationLayer 
+        };
+        L.control.layers(baseMaps, overlays, {collapsed: false, hideSingleBase: true}).addTo(map);
     }
-</script>
-<script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
-<script
-        src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-        crossorigin="anonymous">
 </script>
 </body>
 
