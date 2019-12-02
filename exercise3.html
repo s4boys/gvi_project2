@@ -52,31 +52,110 @@
 
 
 <script>
-
+    const server = "http://localhost:8000/";
     var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
+    var years = ["2015", "2016", "2017"];
+    var map;
+
+    var data2015 = [];
+    var data2016 = [];
+    var data2017 = [];
+
+
+    function fetchGeoJson(source){
+        fetch([server, source].join(''))
+        .then(response => response.json())
+        .then(geoJson => {
+                /**years.forEach( year => {
+                
+                let safeWater = L.geoJson(geoData, {
+                    onEachFeature: onEachFeature,
+                    style: defaultStyle
+                });
+
+                let safeSani = L.geoJson(geoData, {
+                    onEachFeature: onEachFeature,
+                    style: defaultStyle
+                });
+
+                let safeHwsh = L.geoJson(geoData, {
+                    onEachFeature: onEachFeature,
+                    style: defaultStyle
+                });
+                /**/
+                geoJson.features.forEach( feature => {
+                    fetchAPIData(feature, geoJson);
+                })
+
+
+        });
+    }
+
+    function fetchAPIData(feature, geoJson){
+        var countries = new L.FeatureGroup();
+        var geoAreaCode = feature.properties.UN;
+        years.forEach(year => {
+            var encoded = encodeURI([sdgurl, geoAreaCode, sdgtime, year].join(''));
+            console.log(encoded);
+            fetch(encoded)
+            .then(response => {return response.json()})
+            .then(APIData => {
+
+                if (year == "2015") {
+                    data2015.geoAreaCode = APIData;
+                } else if (year == "2016") {
+                    data2016.geoAreaCode= APIData;
+                } else if (year == "2017") {
+                    data2017.geoAreaCode = APIData;
+                }
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        });
+        
+    }
+
+    function createLayer(geoJson, APIData){
+    
+
+
+
+        
+    }
 
     function onEachFeature(feature, layer){
+        console.log(feature.properties);
         var encoded = encodeURI([sdgurl, feature.properties.UN, sdgtime, 2015].join(''));
         fetch(encoded)
         .then(data => {return data.json()})
         .then(res => {
-            currentData = res.data[0];
-            console.log(res);
+            let currentData = res.data[0];
             layer.setStyle({
                 fillColor: colorGradient(currentData.value),
-                fillOpacity: 0.5
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.7
             });
-            //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
             let out = JSON.stringify(currentData, null, 2);
-            console.log(out);
             layer.bindPopup(out);
 
 
             
         })
         .catch(error => {
-            layer.setStyle({fillColor: '#cccccc', fillOpacity: 0.5});
+            layer.setStyle({
+                fillColor: '#cccccc', 
+                fillOpacity: 0.5,
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.7
+            });
             let out = "<b>Keine Daten</b><br>";
             layer.bindPopup(out);
         });
@@ -88,23 +167,23 @@
         g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
         return 'rgb('+r+','+g+',0)';
     }   
-
+    var defaultStyle = {
+                opacity: 0,
+                fillOpacity: 0
+    }
     // call on load
     function initialize() {
 
         // initialize map
-        let map = L.map('map_canvas').setView([48.75, 9.21], 7);
+        map = L.map('map_canvas').setView([48.75, 9.21], 7);
 
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
 
-        fetch('http://localhost:8000/content/europe.geojson')
-        .then(response => response.json())
-        .then(geoData => {
-            let test = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature
-            }).addTo(map);
-        });
+        var data = fetchGeoJson("content/europe.geojson");
+        
+       
+
     }
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
