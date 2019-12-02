@@ -56,125 +56,38 @@
     var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
     var years = ["2015", "2016", "2017"];
-    var map;
+    function csvJSON(csv) {
+        var lines = csv.replace(/\n/g, '');
+        lines = lines.split("\r");
 
-    var countries = {};
-    var data2015;
-    var data2016;
-    var data2017;
+        var result = [];
 
+        var headers = lines[0].split(",");
+
+        for (var i = 1; i < lines.length; i++) {
+
+            var obj = {};
+            var currentline = lines[i].split(",");
+            for (var j = 0; j < headers.length; j++) {
+                obj[headers[j]] = currentline[j];
+            }
+
+            result.push(obj);
+
+        }
+
+        return result; //JavaScript object
+        //return JSON.stringify(result); //JSON
+    }
 
     function fetchGeoJson(source){
         fetch([server, source].join(''))
         .then(response => response.json())
         .then(geoJson => {
-                /**years.forEach( year => {
-                
-                let safeWater = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature,
-                    style: defaultStyle
-                });
-
-                let safeSani = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature,
-                    style: defaultStyle
-                });
-
-                let safeHwsh = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature,
-                    style: defaultStyle
-                });
-                /**/
-                geoJson.features.forEach( feature => {
-                    console.log(feature.properties.UN);
-                    countries[feature.properties.UN] = feature.properties.NAME;
-                    
-                    fetchAPIData(feature, geoJson);
-                })
-                console.log(JSON.stringify(countries));
-
 
         });
     }
-
-    function fetchAPIData(feature, geoJson){
-        var countries = new L.FeatureGroup();
-        var geoAreaCode = feature.properties.UN;
-        let attributes = {
-            SH_H2O_SAFE: 0,
-            SH_SAN_SAFE: 0,
-            SH_SAN_DEFACT: 0,
-            SH_SAN_HNDWSH: 0
-        };
-        years.forEach(year => {
-            var encoded = encodeURI([sdgurl, geoAreaCode, sdgtime, year].join(''));
-            console.log(encoded);
-            fetch(encoded)
-            .then(response => {return response.json()})
-            .then(APIData => {
-
-                if (year == "2015") {
-                    feature.properties["year_2015"] = attributes;
-
-                    data2015.geoAreaCode = APIData ;
-                } else if (year == "2016") {
-                    data2016.geoAreaCode= APIData;
-                } else if (year == "2017") {
-                    data2017.geoAreaCode = APIData;
-                }
-            })
-            .catch(error => {
-                console.log(error);
-            });
-        });
-        
-    }
-
-    function createLayer(geoJson, APIData){
     
-
-
-
-        
-    }
-
-    function onEachFeature(feature, layer){
-        console.log(feature.properties);
-        var encoded = encodeURI([sdgurl, feature.properties.UN, sdgtime, 2015].join(''));
-        fetch(encoded)
-        .then(data => {return data.json()})
-        .then(res => {
-            let currentData = res.data[0];
-            layer.setStyle({
-                fillColor: colorGradient(currentData.value),
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '1',
-                fillOpacity: 0.7
-            });
-            let out = JSON.stringify(currentData, null, 2);
-            layer.bindPopup(out);
-
-
-            
-        })
-        .catch(error => {
-            layer.setStyle({
-                fillColor: '#cccccc', 
-                fillOpacity: 0.5,
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '1',
-                fillOpacity: 0.7
-            });
-            let out = "<b>Keine Daten</b><br>";
-            layer.bindPopup(out);
-        });
-       
-    }
-
     function colorGradient(percent) {
         r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
         g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
@@ -193,8 +106,12 @@
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
 
-        var data = fetchGeoJson("content/europe.geojson");
+        var undData = fetch([server, "content/un_data.csv"].join(''));
         
+        undData.then(response => response.text())
+                .then((data) => {
+                    console.log(csvJSON(data));
+                });
        
 
     }
