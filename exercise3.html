@@ -57,7 +57,7 @@
     var sdgtime ="&timePeriod=";
     var years = ["2015", "2016", "2017"];
 
-    function csvJSON(csv) {
+    function csvToJSON(csv) {
         var lines = csv.replace(/\n/g, '');
         lines = lines.split("\r");
 
@@ -84,28 +84,53 @@
         return result; 
     }
 
-    function fetchGeoJson(source){
-        fetch([server, source].join(''))
-        .then(response => response.json())
-        .then(geoJson => {
+    function onEachFeature(feature, layer, year, type){
+        if( feature.properties.waterData[type][year] != undefined){
+            let out = "<b>" +feature.properties.NAME + "</b></br>" + feature.properties.waterData[type][year] + "%";
+            layer.bindPopup(out);
+        }else{
+            let out = "<b>" +feature.properties.NAME + "</b></br>Keine Daten";
+            layer.bindPopup(out);
+        }
 
-        });
     }
     
     function colorGradient(percent) {
         r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
         g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
         return 'rgb('+r+','+g+',0)';
-    }   
-    var defaultStyle = {
-                opacity: 0,
-                fillOpacity: 0
+    }
+
+    function reverseColorGradient(percent) {
+        r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+        g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+        return 'rgb('+g+','+r+',0)';
+    }
+       
+
+    function style(feature, year, series) {
+        if(series == "SH_SAN_DEFECT"){
+            return{ fillColor: reverseColorGradient(feature.properties.waterData[series][year]),
+                opacity: 1,
+                fillOpacity: 0.7,
+                color: 'white',
+                dashArray: 1,
+                weight: 2
+            }
+        }   
+        return{ fillColor: colorGradient(feature.properties.waterData[series][year]),
+                opacity: 1,
+                fillOpacity: 0.7,
+                color: 'white',
+                dashArray: 1,
+                weight: 2
+            }
     }
     // call on load
     function initialize() {
 
         // initialize map
-        map = L.map('map_canvas').setView([48.75, 9.21], 7);
+        var map = L.map('map_canvas').setView([48.75, 9.21], 7);
 
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
@@ -114,35 +139,99 @@
 
         var unData = fetch([server, "content/un_data.csv"].join(''));
         unData.then(response => response.text())
-                .then((data) => {
-                    console.log(csvJSON(data));
-                });
+            .then((csv) => {
 
-        unData.then(response => response.json())
-            .then((data) => {
+                data = csvToJSON(csv);
 
-                // filter by Location
+                // filter by Location, discard urban and rural
                 let only_allarea = data.filter(x => x.Location === "ALLAREA");
 
-                // split by year
-                let data2016 = only_allarea.filter( x => x.TimePeriod === "2016");
-                let data2017 = only_allarea.filter( x => x.TimePeriod === "2017");
-                let data2018 = only_allarea.filter( x => x.TimePeriod === "2018");
-                
+                let years = ["2015", "2016", "2017"]
+                let seriesCodes = ["SH_H2O_SAFE", "SH_SAN_SAFE", "SH_SAN_DEFECT", "SH_SAN_HNDWSH"]
+
                 // insert into geojson features
-                fetchGeoJson("content/europe.geojson", years)
+                fetch([server, "content/europe.geojson"].join(''))
                 .then(response => response.json())
                 .then(geoJSON => {
                     for (feature of geoJSON.features) {
-                        // create empty object to store data by year
-                        feature.properties.data_by_year = {};
+                        // filter by AreaCode
+                        let filteredByArea = only_allarea.filter( x => x.GeoAreaCode === feature.properties.UN.toString() );
 
-                        feature.properties.data_by_year["2016"] = data2016.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
-                        feature.properties.data_by_year["2017"] = data2017.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
-                        feature.properties.data_by_year["2018"] = data2018.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
+                        // create empty object to store data
+                        let finalData = {};
+                        
+                        // filter By seriesCodes and years
+                        for (code of seriesCodes) {
+                            finalData[code] = {};
+                            filteredByCode = filteredByArea.filter( x => x.SeriesCode === code);
+                            for (year of years) {
+                                // finalData[code][year] = {};
+                                finalData[code][year] = filteredByCode.filter( x => x.TimePeriod.toString() === year).map(x => x.Value).pop();
+                            }
+                        }
+                        feature.properties.waterData = finalData;
+                        // final structure looks like this
+                        // {
+                        //     "properties" : {
+                        //         "waterData" : {
+                        //             "SH_H2O_SAFE": {
+                        //                 "2016" : 0.17
+                        //             }
+                        //         }
+                        //     }
+                        // }
                     } 
+
+                    let baseMaps = {
+                        "BaseMap": osm
+                    }
+                    let overlay = {};
+
+                    for(let year of years){
+                        let safeWater = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_H2O_SAFE")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                console.log
+                                return onEachFeature(feature, layer, year, "SH_H2O_SAFE")
+                            }                        
+                        });
+                        overlay["Safe Water, " + year] = safeWater;
+
+                        let safeSan = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_SAFE")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_SAFE")
+                            }                          
+                        });
+                        overlay["Safe Sanitation, " + year] = safeSan;
+
+                        let sanDefect = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_DEFECT")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_DEFECT")
+                            }                          
+                        });
+                        overlay["Open Defecation, " + year] = sanDefect;
+
+                        let sanHdwsh = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_HNDWSH")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_HNDWSH")
+                            }                          
+                        });
+                        overlay["Basic Handwashing, " + year] = sanHdwsh;
+
+                    }
+                    L.control.layers(baseMaps, overlay, {collapsed: false}).addTo(map);
                 });
-    
             });
     }
 </script>
