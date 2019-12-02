@@ -52,15 +52,16 @@
 
 
 <script>
-    const server = "http://localhost:8000/";
+    const server = "http://localhost:8001/";
     var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
     var years = ["2015", "2016", "2017"];
     var map;
 
-    var data2015 = [];
-    var data2016 = [];
-    var data2017 = [];
+    var countries = {};
+    var data2015;
+    var data2016;
+    var data2017;
 
 
     function fetchGeoJson(source){
@@ -85,8 +86,12 @@
                 });
                 /**/
                 geoJson.features.forEach( feature => {
+                    console.log(feature.properties.UN);
+                    countries[feature.properties.UN] = feature.properties.NAME;
+                    
                     fetchAPIData(feature, geoJson);
                 })
+                console.log(JSON.stringify(countries));
 
 
         });
@@ -95,6 +100,12 @@
     function fetchAPIData(feature, geoJson){
         var countries = new L.FeatureGroup();
         var geoAreaCode = feature.properties.UN;
+        let attributes = {
+            SH_H2O_SAFE: 0,
+            SH_SAN_SAFE: 0,
+            SH_SAN_DEFACT: 0,
+            SH_SAN_HNDWSH: 0
+        };
         years.forEach(year => {
             var encoded = encodeURI([sdgurl, geoAreaCode, sdgtime, year].join(''));
             console.log(encoded);
@@ -103,7 +114,9 @@
             .then(APIData => {
 
                 if (year == "2015") {
-                    data2015.geoAreaCode = APIData;
+                    feature.properties["year_2015"] = attributes;
+
+                    data2015.geoAreaCode = APIData ;
                 } else if (year == "2016") {
                     data2016.geoAreaCode= APIData;
                 } else if (year == "2017") {
