@@ -62,21 +62,30 @@
         .then(data => {return data.json()})
         .then(res => {
             currentData = res.data[0];
-            console.log(res);
             layer.setStyle({
                 fillColor: colorGradient(currentData.value),
-                fillOpacity: 0.6
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.7
             });
             //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
             let out = JSON.stringify(currentData, null, 2);
-            console.log(out);
             layer.bindPopup(out);
 
 
             
         })
         .catch(error => {
-            layer.setStyle({fillColor: '#cccccc', fillOpacity: 0.6});
+            layer.setStyle({
+                fillColor: '#cccccc', 
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.7
+            });
             let out = "<b>Keine Daten</b><br>";
             layer.bindPopup(out);
         });
@@ -88,6 +97,10 @@
         g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
         return 'rgb('+r+','+g+',0)';
     }   
+    var defaultStyle = {
+        opacity: 0,
+        fillOpacity: 0
+    }
 
     // call on load
     function initialize() {
@@ -102,7 +115,8 @@
         .then(response => response.json())
         .then(geoData => {
             let test = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature
+                    onEachFeature: onEachFeature,
+                    style: defaultStyle
             }).addTo(map);
         });
     }
