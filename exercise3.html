@@ -56,6 +56,7 @@
     var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
     var years = ["2015", "2016", "2017"];
+
     function csvJSON(csv) {
         var lines = csv.replace(/\n/g, '');
         lines = lines.split("\r");
@@ -63,21 +64,24 @@
         var result = [];
 
         var headers = lines[0].split(",");
+    
 
         for (var i = 1; i < lines.length; i++) {
 
             var obj = {};
             var currentline = lines[i].split(",");
+
             for (var j = 0; j < headers.length; j++) {
-                obj[headers[j]] = currentline[j];
+                let word = currentline[j];
+
+                obj[headers[j]] = word.substring(1, word.length-1);
             }
 
             result.push(obj);
 
         }
 
-        return result; //JavaScript object
-        //return JSON.stringify(result); //JSON
+        return result; 
     }
 
     function fetchGeoJson(source){
@@ -106,12 +110,31 @@
         let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
 
-        var undData = fetch([server, "content/un_data.csv"].join(''));
         
-        undData.then(response => response.text())
+
+        var unData = fetch([server, "content/un_data.csv"].join(''));
+        unData.then(response => response.text())
                 .then((data) => {
                     console.log(csvJSON(data));
                 });
+
+        unData.then(response => response.json())
+                .then((data) => {
+
+                    // filter by Location
+                    let only_allarea = data.filter(x => x.Location === "ALLAREA");
+
+                    // split by year
+                    let data2016 = only_allarea.filter( x => x.TimePeriod === "2016");
+                    let data2017 = only_allarea.filter( x => x.TimePeriod === "2017");
+                    let data2018 = only_allarea.filter( x => x.TimePeriod === "2018");
+                    
+                    // insert into geojson features
+                    fetchGeoJson("content/europe.geojson", years)
+                    .then(response => response.json())
+        .           .then(geoJson => {
+
+                    })
        
 
     }
