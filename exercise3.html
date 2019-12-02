@@ -65,7 +65,7 @@
             console.log(res);
             layer.setStyle({
                 fillColor: colorGradient(currentData.value),
-                fillOpacity: 0.5
+                fillOpacity: 0.6
             });
             //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
             let out = JSON.stringify(currentData, null, 2);
@@ -76,7 +76,7 @@
             
         })
         .catch(error => {
-            layer.setStyle({fillColor: '#cccccc', fillOpacity: 0.5});
+            layer.setStyle({fillColor: '#cccccc', fillOpacity: 0.6});
             let out = "<b>Keine Daten</b><br>";
             layer.bindPopup(out);
         });
