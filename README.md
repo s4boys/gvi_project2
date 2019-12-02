@@ -2,6 +2,9 @@
 author: Felix Schick (71scfe1bif), Nicolas Mohr (81moni1bif)  
 date: 29. November 2019
 
+
+Das repository dieses Projekts ist unter https://github.com/s4boys/gvi_project2 zu finden.
+
 ## Aufgabe 1 - Bevölkerungsdichte in Europa
 
 Der Datensatz, welcher für diese Aufgabe benutzt werden sollte bestand aus mehreren Sätzen des Dateiformats **Shapefile**. Dieses von ESRI entwickelte Dateiformat wird als Container für vektorielle Geodaten benutzt.
@@ -73,13 +76,13 @@ Mit einem Menü im User Interface kann zwischen den verschiedenen Datenkategorie
 Durch einen Klick auf die Länder der Karte können die konkreten Werte in einem Popup angezeigt werden lassen.
 
 Durch die Farbskala werden problematische Wasserwerte in Südosteuropa schnell offensichtlich. 
-![sanitation2015](/documentation/pics/sanitation2015.png)
+![sanitation2015](documentation/pics/sanitation2015.png)
 
 Einige europäische Länder weisen des öfteren keine Daten auf. Diese werden in der Visualisierung als farblos markiert.
-![sanitation nodata ](/documentation/pics/sanitation_nodata.png)
+![sanitation nodata ](documentation/pics/sanitation_nodata.png)
 
 In Kategorien, in denen alle Werte außerhalb bedenklicher Bereiche liegen, wird es schwieriger, die Werte visuell gegeneinander abzuschätzen.
-![water2017](/documentation/pics/water2017.png)
+![water2017](documentation/pics/water2017.png)
 
 
 ### Karte selber hosten
