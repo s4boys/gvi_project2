@@ -63,18 +63,18 @@
 
         var result = [];
 
-        var headers = lines[0].split(",");
+        var headers = lines[0].split(";");
     
 
         for (var i = 1; i < lines.length; i++) {
 
             var obj = {};
-            var currentline = lines[i].split(",");
+            var currentline = lines[i].split(";");
 
             for (var j = 0; j < headers.length; j++) {
                 let word = currentline[j];
 
-                obj[headers[j]] = word.substring(1, word.length-1);
+                obj[headers[j]] = word;
             }
 
             result.push(obj);
@@ -119,24 +119,31 @@
                 });
 
         unData.then(response => response.json())
-                .then((data) => {
+            .then((data) => {
 
-                    // filter by Location
-                    let only_allarea = data.filter(x => x.Location === "ALLAREA");
+                // filter by Location
+                let only_allarea = data.filter(x => x.Location === "ALLAREA");
 
-                    // split by year
-                    let data2016 = only_allarea.filter( x => x.TimePeriod === "2016");
-                    let data2017 = only_allarea.filter( x => x.TimePeriod === "2017");
-                    let data2018 = only_allarea.filter( x => x.TimePeriod === "2018");
-                    
-                    // insert into geojson features
-                    fetchGeoJson("content/europe.geojson", years)
-                    .then(response => response.json())
-        .           .then(geoJson => {
+                // split by year
+                let data2016 = only_allarea.filter( x => x.TimePeriod === "2016");
+                let data2017 = only_allarea.filter( x => x.TimePeriod === "2017");
+                let data2018 = only_allarea.filter( x => x.TimePeriod === "2018");
+                
+                // insert into geojson features
+                fetchGeoJson("content/europe.geojson", years)
+                .then(response => response.json())
+                .then(geoJSON => {
+                    for (feature of geoJSON.features) {
+                        // create empty object to store data by year
+                        feature.properties.data_by_year = {};
 
-                    })
-       
-
+                        feature.properties.data_by_year["2016"] = data2016.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
+                        feature.properties.data_by_year["2017"] = data2017.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
+                        feature.properties.data_by_year["2018"] = data2018.filter( x => x.GeoAreaCode === feature.properties.UN).map(x => x.Value).pop();
+                    } 
+                });
+    
+            });
     }
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
