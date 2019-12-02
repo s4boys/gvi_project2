@@ -52,154 +52,187 @@
 
 
 <script>
-
+    const server = "http://localhost:8001/";
     var sdgurl ="https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=";
     var sdgtime ="&timePeriod=";
-
     var years = ["2015", "2016", "2017"];
-    var currentyear;
-    var map;
-    var osm;
 
-    var h2oSafe = new L.LayerGroup();
-    var sanSafe = new L.LayerGroup();
-    var sanDefect = new L.LayerGroup();
-    var sanHndwsh = new L.LayerGroup();
+    function csvToJSON(csv) {
+        var lines = csv.replace(/\n/g, '');
+        lines = lines.split("\r");
 
+        var result = [];
 
-    var baseMaps = {
-        "BaseMap": osm
-    };
+        var headers = lines[0].split(";");
+    
 
-    var overlayMaps = {
-        "h2o": h2oSafe,
-        "sanSafe": sanSafe,
-        "sanDefect": sanDefect,
-        "sanHndwsh": sanHndwsh
-    };
+        for (var i = 1; i < lines.length; i++) {
 
-    function onEachFeature(feature, layer){
+            var obj = {};
+            var currentline = lines[i].split(";");
 
-        var encoded = encodeURI([sdgurl, feature.properties.UN, sdgtime, currentyear].join(''));
-        fetch(encoded)
-        .then(data => {return data.json()})
-        .then(res => {
-            currentData = res.data[0];
-            res.data.forEach(entry => {
-                if((entry.dimensions.Location == "ALLAREA") && (entry.series == "SH_H2O_SAFE")){
-                    layer.setStyle({
-                        fillColor: colorGradient(currentData.value),
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        dashArray: '1',
-                        fillOpacity: 0.7
-                    });
-                    //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
-                    let out = JSON.stringify(currentData, null, 2);
-                    layer.bindPopup(out);
-                }
-                /**
-                if((entry.dimensions.Location == "ALLAREA") && (entry.series == "SH_SAN_SAFE")){
-                    layer.setStyle({
-                        fillColor: colorGradient(currentData.value),
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        dashArray: '1',
-                        fillOpacity: 0.7
-                    });
-                    //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
-                    let out = JSON.stringify(currentData, null, 2);
-                    layer.bindPopup(out);
-                    sanSafe.addLayer(layer);        
-                }
+            for (var j = 0; j < headers.length; j++) {
+                let word = currentline[j];
 
+                obj[headers[j]] = word;
+            }
 
-                if((entry.dimensions.Location == "ALLAREA") && (entry.series == "SH_SAN_DEFEC")){
-                    layer.setStyle({
-                        fillColor: colorGradient(currentData.value),
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        dashArray: '1',
-                        fillOpacity: 0.7
-                    });
-                    //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
-                    let out = JSON.stringify(currentData, null, 2);
-                    layer.bindPopup(out);
-                    sanDefect.addLayer(layer);        
-                }
+            result.push(obj);
 
-                if((entry.dimensions.Location == "ALLAREA") && (entry.series == "SH_SAN_HNDWSH")){
-                    console.log(entry);
-                    layer.setStyle({
-                        fillColor: colorGradient(currentData.value),
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        dashArray: '1',
-                        fillOpacity: 0.7
-                    });
-                    //let out = "<b>" + currentData.geoAreaName + ": " + currentData.value + "</b><br>" + currentData.seriesDescription;
-                    let out = JSON.stringify(currentData, null, 2);
-                    layer.bindPopup(out);
-                    sanHndwsh.addLayer(layer);        
-                }**/
-            });
+        }
 
-
-
-
-        })
-        .catch(error => {
-            layer.setStyle({
-                fillColor: '#cccccc', 
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '1',
-                fillOpacity: 0.7
-            });
-            let out = "<b>Keine Daten</b><br>";
-            layer.bindPopup(out);
-        });
-       
+        return result; 
     }
 
+    function onEachFeature(feature, layer, year, type){
+        if( feature.properties.waterData[type][year] != undefined){
+            let out = "<b>" +feature.properties.NAME + "</b></br>" + feature.properties.waterData[type][year] + "%";
+            layer.bindPopup(out);
+        }else{
+            let out = "<b>" +feature.properties.NAME + "</b></br>Keine Daten";
+            layer.bindPopup(out);
+        }
+
+    }
+    
     function colorGradient(percent) {
         r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
         g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
         return 'rgb('+r+','+g+',0)';
-    }   
-    var defaultStyle = {
-        opacity: 0,
-        fillOpacity: 0
     }
 
+    function reverseColorGradient(percent) {
+        r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+        g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+        return 'rgb('+g+','+r+',0)';
+    }
+       
+
+    function style(feature, year, series) {
+        if(series == "SH_SAN_DEFECT"){
+            return{ fillColor: reverseColorGradient(feature.properties.waterData[series][year]),
+                opacity: 1,
+                fillOpacity: 0.7,
+                color: 'white',
+                dashArray: 1,
+                weight: 2
+            }
+        }   
+        return{ fillColor: colorGradient(feature.properties.waterData[series][year]),
+                opacity: 1,
+                fillOpacity: 0.7,
+                color: 'white',
+                dashArray: 1,
+                weight: 2
+            }
+    }
     // call on load
     function initialize() {
 
         // initialize map
-        map = L.map('map_canvas').setView([48.75, 9.21], 7);
+        var map = L.map('map_canvas').setView([48.75, 9.21], 7);
 
         osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         }).addTo(map);
 
-        fetch('http://localhost:8000/content/europe.geojson')
-        .then(response => response.json())
-        .then(geoData => {
-            years.forEach( year => {
-                currentyear = year;
-                let test = L.geoJson(geoData, {
-                    onEachFeature: onEachFeature,
-                    style: defaultStyle
-                }).addTo(map);
+        
+
+        var unData = fetch([server, "content/un_data.csv"].join(''));
+        unData.then(response => response.text())
+            .then((csv) => {
+
+                data = csvToJSON(csv);
+
+                // filter by Location, discard urban and rural
+                let only_allarea = data.filter(x => x.Location === "ALLAREA");
+
+                let years = ["2015", "2016", "2017"]
+                let seriesCodes = ["SH_H2O_SAFE", "SH_SAN_SAFE", "SH_SAN_DEFECT", "SH_SAN_HNDWSH"]
+
+                // insert into geojson features
+                fetch([server, "content/europe.geojson"].join(''))
+                .then(response => response.json())
+                .then(geoJSON => {
+                    for (feature of geoJSON.features) {
+                        // filter by AreaCode
+                        let filteredByArea = only_allarea.filter( x => x.GeoAreaCode === feature.properties.UN.toString() );
+
+                        // create empty object to store data
+                        let finalData = {};
+                        
+                        // filter By seriesCodes and years
+                        for (code of seriesCodes) {
+                            finalData[code] = {};
+                            filteredByCode = filteredByArea.filter( x => x.SeriesCode === code);
+                            for (year of years) {
+                                // finalData[code][year] = {};
+                                finalData[code][year] = filteredByCode.filter( x => x.TimePeriod.toString() === year).map(x => x.Value).pop();
+                            }
+                        }
+                        feature.properties.waterData = finalData;
+                        // final structure looks like this
+                        // {
+                        //     "properties" : {
+                        //         "waterData" : {
+                        //             "SH_H2O_SAFE": {
+                        //                 "2016" : 0.17
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                    } 
+
+                    let baseMaps = {
+                        "BaseMap": osm
+                    }
+                    let overlay = {};
+
+                    for(let year of years){
+                        let safeWater = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_H2O_SAFE")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                console.log
+                                return onEachFeature(feature, layer, year, "SH_H2O_SAFE")
+                            }                        
+                        });
+                        overlay["Safe Water, " + year] = safeWater;
+
+                        let safeSan = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_SAFE")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_SAFE")
+                            }                          
+                        });
+                        overlay["Safe Sanitation, " + year] = safeSan;
+
+                        let sanDefect = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_DEFECT")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_DEFECT")
+                            }                          
+                        });
+                        overlay["Open Defecation, " + year] = sanDefect;
+
+                        let sanHdwsh = L.geoJson(geoJSON,{
+                            style: function (feature) {
+                                return style(feature, year, "SH_SAN_HNDWSH")
+                            },
+                            onEachFeature:  function (feature, layer) {
+                                return onEachFeature(feature, layer, year, "SH_SAN_HNDWSH")
+                            }                          
+                        });
+                        overlay["Basic Handwashing, " + year] = sanHdwsh;
+
+                    }
+                    L.control.layers(baseMaps, overlay, {collapsed: false}).addTo(map);
+                });
             });
-
-
-        });
-
     }
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
