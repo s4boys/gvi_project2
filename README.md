@@ -55,3 +55,38 @@ Danach kann die Karte im Browser unter [http://localhost:8000/exercise1.html](ht
 
 
 ## Aufgabe 3 - Karte Sustainable Indicators in Europa
+Der Datensatz der Sustainable Indicators der UN ist im CSV-Format kann von der in der Aufgabenstellung spezifizierten Seite heruntergeladen werden.
+Leider weist der Datensatze einige Eigenschaften auf, die das Parsen erschweren, wie beispielsweise eine übergroße Menge an Nullbytes am Ende der Datei.
+Eine von solchen Eigenschaften bereinigte Version der CSV-Datei ist unter [content/un_data.csv](content/un_data.csv) zu finden.
+Diese Datei wird, wie auch in Aufgabe 2, vom Python Webserver unter server.py gehostet.
+
+Das Frontend ist in [exercise3.html](exercise3.html) zu finden.
+Es fragt die CSV-basierten Daten vom Server an und parsed sie anschließend in Javascript-Objekte.
+Anschließend werden vom Server die Daten der bereits in vorherigen Aufgaben verwendete GeoJSON-Datei eingelesen.
+Da die Länderspezifischen Daten der GeoJSON und die Daten der UN mit identischen Ländercodes markiert sind, können die zu Ländern korrespondierenden Datensätze leicht zugeordnet werden und in als GeoJSON Länder- `properties` eingefügt werden.
+
+Anschließend treten verschiedene Layer zur Visualisierung der Datenwerte in Kraft.
+Aus den numerischen Werten für die einzelnen Datenkategorien und Jahren Werten wird über eine Formel ein abgestufter Farbton berechnet.
+Die Farbskala muss hier bei manchen Kategorien umgekehrt werden, wenn niedrige Werte einen als besser zu interpretierenden Wert repräsentieren.
+Mit einem Menü im User Interface kann zwischen den verschiedenen Datenkategorien und Jahren gewechselt werden.
+
+Durch einen Klick auf die Länder der Karte können die konkreten Werte in einem Popup angezeigt werden lassen.
+
+Durch die Farbskala werden problematische Wasserwerte in Südosteuropa schnell offensichtlich. 
+![sanitation2015](/documentation/pics/sanitation2015.png)
+
+Einige europäische Länder weisen des öfteren keine Daten auf. Diese werden in der Visualisierung als farblos markiert.
+![sanitation nodata ](/documentation/pics/sanitation_nodata.png)
+
+In Kategorien, in denen alle Werte außerhalb bedenklicher Bereiche liegen, wird es schwieriger, die Werte visuell gegeneinander abzuschätzen.
+![water2017](/documentation/pics/water2017.png)
+
+
+### Karte selber hosten
+
+In dem Projekt Repository befindet sich das Python Skript ```serve.py``` welches einen einfachen HTTP Server mit Port 8000 im Ordner startet. Ein alternativer Port kann im Skript eingetragen werden
+
+Server starten mit:  
+```./serve.py```
+
+Danach kann die Karte im Browser unter [http://localhost:8000/exercise1.html](http://localhost:8000/exercise1.html) angesehen werden.
